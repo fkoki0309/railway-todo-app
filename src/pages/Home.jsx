@@ -8,7 +8,7 @@ import "./home.scss";
 import PropTypes from "prop-types";
 
 export const Home = () => {
-  const [isDoneDisplay, setIsDoneDisplay] = useState("todo"); // todo->未完了 done->完了
+  const [isDoneDisplay, setIsDoneDisplay] = useState("todo");
   const [lists, setLists] = useState([]);
   const [selectListId, setSelectListId] = useState();
   const [tasks, setTasks] = useState([]);
@@ -70,6 +70,37 @@ export const Home = () => {
     isDoneDisplay: PropTypes.string.isRequired,
   };
 
+  const handleKeyDown = (e, index) => {//keyを押した際の処理
+    let newIndex;//移動先のindex
+    switch (e.key) {
+      case "ArrowRight":
+        e.preventDefault();
+        newIndex = index + 1;
+        if (newIndex >= lists.length) {//移動先がリストの数よりも大きい値なら最初のリストに移動
+          newIndex = 0;
+        }
+
+        document.getElementById(`tab-${lists[newIndex].id}`)?.focus();//移動先にフォーカスを表示
+        break;
+
+      case "ArrowLeft":
+        e.preventDefault();
+        newIndex = index - 1;
+        if (newIndex < 0) {//移動先が0よりも小さい値なら最後のリストに移動
+          newIndex = lists.length - 1;
+        }
+        document.getElementById(`tab-${lists[newIndex].id}`)?.focus();
+        break;
+      case "Enter":
+        handleSelectList(lists[index].id);//フォーカスを表示しているリストを選択し、タスクを表示
+        break;
+      default:
+        break;
+    }
+
+
+  };
+
   return (
     <div>
       <Header />
@@ -89,20 +120,23 @@ export const Home = () => {
               </p>
             </div>
           </div>
-          <ul className="list-tab">
-            {lists.map((list, key) => {
-              const isActive = list.id === selectListId;
-              return (
-                <li
-                  key={key}
-                  className={`list-tab-item ${isActive ? "active" : ""}`}
-                  onClick={() => handleSelectList(list.id)}
-                >
-                  {list.title}
-                </li>
-              );
-            })}
+          <ul role="tablist" className="list-tab">
+            {lists.map((list, index) => (
+              <li
+                key={list.id}
+                role="tab"
+                tabIndex={list.id === selectListId ? 0 : -1}//tabの選択非選択の設定
+                aria-selected={list.id === selectListId ? "true" : "false"}
+                id={`tab-${list.id}`}
+                className={`list-tab-item ${list.id === selectListId ? "active" : ""}`}
+                onClick={() => handleSelectList(list.id)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
+              >
+                {list.title}
+              </li>
+            ))}
           </ul>
+
           <div className="tasks">
             <div className="tasks-header">
               <h2>タスク一覧</h2>
@@ -129,13 +163,30 @@ export const Home = () => {
   );
 };
 
+
+
+
+
+
 // 表示するタスク
 const Tasks = (props) => {
   const { tasks, selectListId, isDoneDisplay } = props;
+  const setAmountOfTime = (task) => {
+    const amountOfTime = new Date(task.limit) - new Date();
+    const sec = Math.floor(amountOfTime / 1000) % 60;
+    const min = Math.floor(amountOfTime / 1000 / 60) % 60;
+    const hours = Math.floor(amountOfTime / 1000 / 60 / 60) % 24;
+    const days = Math.floor(amountOfTime / 1000 / 60 / 60 / 24);
+    if (amountOfTime > 0) {
+      return '残り' + days + '日' + hours + '時間' + min + '分' + sec + '秒';
+    } else {
+      return '期限が過ぎました';
+    }
+  }
 
-  if (tasks === null) return <></>;
+  if (tasks == null) return <></>;
 
-  if (isDoneDisplay == "done") {
+  if (isDoneDisplay === "done") {
     return (
       <ul>
         {tasks
@@ -150,6 +201,8 @@ const Tasks = (props) => {
               >
                 {task.title}
                 <br />
+                <div>期限日時　{new Date(task.limit).toLocaleString('ja-JP')}</div>
+                <div>残り日時　{setAmountOfTime(task)}</div>
                 {task.done ? "完了" : "未完了"}
               </Link>
             </li>
@@ -172,7 +225,9 @@ const Tasks = (props) => {
             >
               {task.title}
               <br />
-              {task.done ? "完了" : "未完了"}
+              <div>期限日時　{new Date(task.limit).toLocaleString('ja-JP')}</div>
+              <div>残り日時　{setAmountOfTime(task)}</div>
+              <div>{task.done ? "完了" : "未完了"}</div>
             </Link>
           </li>
         ))}

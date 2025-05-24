@@ -4,6 +4,7 @@
   width: 500px;
   margin: 0 auto;
 }
+
 .signup-form {
   margin: 25px 0;
   color: #555555;
@@ -28,4 +29,11 @@
 
 .error-message {
   color: #ff3333;
+}
+
+@media(max-width:1280px) {
+  .signup {
+    width: 60%;
+    text-align: center;
+  }
 }

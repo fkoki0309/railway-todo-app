@@ -14,15 +14,49 @@ export const EditTask = () => {
   const [detail, setDetail] = useState("");
   const [isDone, setIsDone] = useState();
   const [errorMessage, setErrorMessage] = useState("");
+  const [limit, setLimit] = useState('');
+  const handleLimitChange = (e) => setLimit(e.target.value);
   const handleTitleChange = (e) => setTitle(e.target.value);
   const handleDetailChange = (e) => setDetail(e.target.value);
   const handleIsDoneChange = (e) => setIsDone(e.target.value === "done");
+
+  const toLocalISOString = (date) => {
+    if (!(date instanceof Date)) {
+      date = new Date(date)
+    }
+    // もし不正な日時ならば'Invalid Date'を返す
+    // 'Invalid Date'は Date オブジェクトの仕様で定められている日付として不正な時に返す文字列
+    // @see https://tc39.es/ecma262/multipage/numbers-and-dates.html#sec-date-objects
+    if (date.toString() === 'Invalid Date') {
+      return 'Invalid Date';
+    }
+    // 連続して同じ処理を行うので関数化して略しやすくする
+    // 1桁の数値でも必ず2桁になるようにする
+    const pad = num => String(num).padStart(2, '0');
+    // Date オブジェクトの各メソッドと↑のパディング関数を用いてISO形式を構築するための年月日時分秒の文字列を用意
+    const yyyy = date.getFullYear();
+    const MM = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    const ss = pad(date.getSeconds());
+    // タイムゾーン文字列を用意
+    // getTimezoneOffset メソッドは現在のロケールから協定世界時 (UTC) までのタイムゾーンの差を分単位で返すのでマイナスをかけて反転
+    const tzMin = -date.getTimezoneOffset();
+    // 分のみで構成されたタイムゾーンから符号、時、余りの分を抜き出してISO形式を構築するためのタイムゾーン文字列を用意
+    const timezone = `${tzMin >= 0 ? '+' : '-'}${pad(Math.floor(Math.abs(tzMin) / 60))}:${pad(Math.abs(tzMin) % 60)}`
+    // ここまでで用意したそれぞれをISO形式になるようにとりまとめる
+    return `${yyyy}-${MM}-${dd}T${hh}:${mm}:${ss}${timezone}`;
+  }
+
   const onUpdateTask = () => {
     console.log(isDone);
+    const formattedDate = limit ? toLocalISOString(new Date(limit)) : null;//ISO形式に直す
     const data = {
       title: title,
       detail: detail,
       done: isDone,
+      limit: formattedDate,
     };
 
     axios
@@ -67,6 +101,7 @@ export const EditTask = () => {
         setTitle(task.title);
         setDetail(task.detail);
         setIsDone(task.done);
+        setLimit(task.limit ? toLocalISOString(task.limit).slice(0, 16) : "");//期限取得
       })
       .catch((err) => {
         setErrorMessage(`タスク情報の取得に失敗しました。${err}`);
@@ -98,6 +133,13 @@ export const EditTask = () => {
             value={detail}
           />
           <br />
+          <input
+            type="datetime-local"
+            id="edit-DateTime"
+            onChange={handleLimitChange}
+            value={limit} />
+          <br />
+
           <div>
             <input
               type="radio"

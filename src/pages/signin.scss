@@ -17,9 +17,12 @@
 .email-input,
 .password-input {
   width: 100%;
-  font-size: large;
   height: 30px;
   margin-bottom: 25px;
+
+  font: {
+    size: large;
+  }
 }
 
 .signin-button {
@@ -32,4 +35,11 @@
 
 .error-message {
   color: #ff3333;
+}
+
+@media(max-width:1280px) {
+  .signin {
+    width: 60%;
+    text-align: center;
+  }
 }

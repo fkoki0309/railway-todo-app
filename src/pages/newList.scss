@@ -21,3 +21,11 @@
   height: 40px;
   border-radius: 5px;
 }
+
+@media(max-width:1280px) {
+  .new-list {
+    width: 100%;
+    text-align: center;
+    margin-top: 20px;
+  }
+}
